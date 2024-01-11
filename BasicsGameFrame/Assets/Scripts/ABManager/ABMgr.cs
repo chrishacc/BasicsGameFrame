@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class ABMgr : SingletonAutoMono<ABMgr>
 {
@@ -101,7 +102,86 @@ public class ABMgr : SingletonAutoMono<ABMgr>
     }
 
     //异步加载
+    //这里的异步加载 AB包并没有使用异步加载
+    //只是从AB包中 加载资源时 使用异步
 
+    //根据名字 异步加载资源
+    public void LoadResAsync(string abName, string resName, UnityAction<Object> callBack)
+    {
+        StartCoroutine(ReallyLoadResAsync(abName, resName, callBack));
+    }
+
+    private IEnumerator ReallyLoadResAsync(string abName, string resName, UnityAction<Object> callBack)
+    {
+        LoadAB(abName);
+
+        //加载资源
+        AssetBundleRequest abr = abDic[abName].LoadAssetAsync(resName);
+        yield return abr;
+
+        //异步加载结束后 通过委托 传递给外部 外部来使用
+        if(abr.asset is GameObject)
+        {
+            callBack(abr.asset);
+        }
+        else
+        {
+            Debug.LogError("资源加载失败");
+        }
+
+    }
+
+    //根据type 异步加载资源
+    public void LoadResAsync(string abName, string resName, System.Type type,UnityAction<Object> callBack)
+    {
+        StartCoroutine(ReallyLoadResAsync(abName, resName, type,callBack));
+    }
+
+    private IEnumerator ReallyLoadResAsync(string abName, string resName, System.Type type, UnityAction<Object> callBack)
+    {
+        LoadAB(abName);
+
+        //加载资源
+        AssetBundleRequest abr = abDic[abName].LoadAssetAsync(resName, type);
+        yield return abr;
+
+        //异步加载结束后 通过委托 传递给外部 外部来使用
+        if (abr.asset is GameObject)
+        {
+            callBack(abr.asset);
+        }
+        else
+        {
+            Debug.LogError("资源加载失败");
+        }
+
+    }
+
+    //根据泛型 异步加载资源
+    public void LoadResAsync<T>(string abName, string resName, UnityAction<Object> callBack) where T : Object
+    {
+        StartCoroutine(ReallyLoadResAsync<T>(abName, resName, callBack));
+    }
+
+    private IEnumerator ReallyLoadResAsync<T>(string abName, string resName, UnityAction<Object> callBack) where T : Object
+    {
+        LoadAB(abName);
+
+        //加载资源
+        AssetBundleRequest abr = abDic[abName].LoadAssetAsync<T>(resName);
+        yield return abr;
+
+        //异步加载结束后 通过委托 传递给外部 外部来使用
+        if (abr.asset is GameObject)
+        {
+            callBack(abr.asset);
+        }
+        else
+        {
+            Debug.LogError("资源加载失败");
+        }
+
+    }
 
     //单个包卸载
     public void UnLoad(string abName)
